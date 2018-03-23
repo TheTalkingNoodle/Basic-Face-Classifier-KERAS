@@ -15,5 +15,7 @@ fnmatch
 
 yaml
 
+termcolor
+
 # ====== Steps ======
 Download/Clone this repository in any folder and run.
