@@ -21,11 +21,15 @@ vino=0
 # ============================= GENERATE DATASETS =============================#
 def gen_photos(dir, name):
 
+    # Initialize Webcam
     cap = cv2.VideoCapture(vino)
     cap.set(3, 1920)
     cap.set(4, 1080)
 
+    # Folder name for the dataset
     class_fold=dir+"datasets\\"+name
+
+    # Get number of exisiting files
     posfiles = fnmatch.filter(os.listdir(class_fold), '*.jpg')
     posfiles = [os.path.splitext(each)[0] for each in posfiles]
     posfiles = np.asarray(posfiles)
@@ -40,13 +44,20 @@ def gen_photos(dir, name):
     else:
         n = np.amax(posfiles) + 1
 
+    # While Loop for dataset generation
+    print ("Press 'c' to store files.")
     while (1):
+        # Get Image
         ret, img = cap.read()
         roi=img.copy()
+
+        # Convert To Grayscale
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        # img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+        # Setup the cascade classifier for frontal face detection
         face_cascade = cv2.CascadeClassifier('C:\Python36\Lib\site-packages\cv2\data\haarcascade_frontalface_default.xml')
-        #print (face_cascade.load('C:\Python36\Lib\site-packages\cv2\data\haarcascade_frontalface_default.xml'))
+
+        # Get faces from the image
         faces = face_cascade.detectMultiScale(
             gray,
             scaleFactor=1.1,
@@ -55,18 +66,18 @@ def gen_photos(dir, name):
             flags=cv2.CASCADE_SCALE_IMAGE
         )
 
-
         key = cv2.waitKey(1) & 0xFF
 
+        # Process for every face in the image
         for (x, y, w, h) in faces:
             top_left=(x,y)
             bottom_right=(x+w,y+h)
-            #crop = img[y:y+h,x:x+w]
+
             roi = cv2.rectangle(roi, (top_left[0], top_left[1]), (bottom_right[0], bottom_right[1]), (255,255,255), 2)
             roi = cv2.resize(roi,(640,480))
             cv2.imshow("ROI",roi)
 
-
+        # press 'c' to store files
             if key == ord("c"):
                 crop_img = img[y:y+h,x:x+w]
                 cv2.imwrite(class_fold + "\\" + name + "_" + str(n) + ".jpg", crop_img)
@@ -77,7 +88,7 @@ def gen_photos(dir, name):
 
                 n += 1
 
-        # ================== IMAGE DISPLAY
+        # Image Display
         img = cv2.resize(img,(640,480))
         cv2.imshow('LIVE', img)
 
@@ -94,6 +105,7 @@ def gen_photos(dir, name):
 # ============================= DATA PROCESSING =============================#
 def load_data(w,h):
 
+    # Folder where dataset is stored
     data_fold = curr_dir + "datasets/"
     classes = os.listdir(data_fold)
     load_data.classes=len(classes)
@@ -105,6 +117,7 @@ def load_data(w,h):
     y_train=[]
     y_test=[]
 
+    # Load files from the dataset folders and write their names in the .yaml file
     for i in classes:
         with open(curr_dir + "data.yaml", 'r') as stream:
             data_loaded = yaml.load(stream)
@@ -141,6 +154,7 @@ def load_data(w,h):
             data=np.reshape(image,(w,h,3))
             x.append(data)
             y.append(classno)
+            # Store every 5th Image in Test Set, Otherwise store in training set
             if k%5==0:
                 x_test.append(data)
                 y_test.append(classno)
@@ -162,6 +176,7 @@ def load_data(w,h):
 
 # ============================= TRAIN =============================#
 def model_train(w,h):
+
     # the data split between train and test sets
     X_train, Y_train, X_test, Y_test = load_data(w,h)
     X_train = X_train.astype('float32')
@@ -198,6 +213,7 @@ def model_train(w,h):
                   metrics=['accuracy'])
 
     # ==================== Fit model
+    # Store weights only if validation loss has improved
     checkpoint_1 = ModelCheckpoint(curr_dir+"Weights/face_classifier_model.h5", monitor='val_loss', verbose=1, save_best_only=True,
                                  save_weights_only=False, mode='auto', period=1)
     callbacks = [checkpoint_1]
@@ -228,9 +244,7 @@ def classify(w_model,h_model):
         ret, img = cap.read()
         roi=img.copy()
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        # img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         face_cascade = cv2.CascadeClassifier('C:\Python36\Lib\site-packages\cv2\data\haarcascade_frontalface_default.xml')
-        #print (face_cascade.load('C:\Python36\Lib\site-packages\cv2\data\haarcascade_frontalface_default.xml'))
         faces = face_cascade.detectMultiScale(
             gray,
             scaleFactor=1.1,
@@ -245,7 +259,6 @@ def classify(w_model,h_model):
         for (x, y, w, h) in faces:
             top_left=(x,y)
             bottom_right=(x+w,y+h)
-            #crop = img[y:y+h,x:x+w]
             roi = cv2.rectangle(roi, (top_left[0], top_left[1]), (bottom_right[0], bottom_right[1]), (255,255,255), 2)
             roi = cv2.resize(roi,(640,480))
 
@@ -255,7 +268,6 @@ def classify(w_model,h_model):
             data=np.reshape(data,(1,w_model,h_model,3))
             predict = model.predict(data)
             predict=predict[0].tolist()
-            #print (predict)
             result=predict.index(np.max(predict))
 
             name = data_loaded[result]['Name']
@@ -268,7 +280,6 @@ def classify(w_model,h_model):
         img = cv2.resize(img,(640,480))
         cv2.imshow('LIVE', img)
 
-
         if key == ord("q"):
             cap.release()
             cv2.destroyAllWindows()
@@ -278,12 +289,14 @@ def classify(w_model,h_model):
 # ============================= MAIN =============================#
 if __name__== "__main__":
 
+    # Define dimensions for the images to be trained (they will be shrinked to this size)
     w=100
     h=100
+
     # Get current directory.
     curr_dir=os.path.dirname(os.path.realpath(sys.argv[0]))
 
-    #Check if the directory ends with /
+    # Check if the directory ends with /
     if curr_dir[-1] != '\\':
         curr_dir+="\\"
     print ("\nDirectory Name:")
@@ -295,11 +308,12 @@ if __name__== "__main__":
     if not os.path.exists(dataset_fold):
         os.makedirs(dataset_fold)
 
-    # Get Weights folder
+    # Create Weights folder
     weights_fold = curr_dir + "Weights"
     if not os.path.exists(weights_fold):
         os.makedirs(weights_fold)
 
+    # Create .yaml file
     if not os.path.exists(curr_dir + "data.yaml"):
         file = open(curr_dir + "data.yaml", "w")
         file.close()
