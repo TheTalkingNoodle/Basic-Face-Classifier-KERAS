@@ -6,6 +6,14 @@ These files let you create dataset, train and test your face classifier. It uses
 
 The Network Model consists of two convolution NN layers followed by two Fully-connected layers. The network can be increased or pretrained networks can also be used instead.
 
+Options:
+1. Create Dataset
+	> The dataset is stored in datasets/ folder
+2. Classify (Won't work unless trained)
+	> The Result of Face Classification is displayed on the LIVE Video Feed.
+3. Train
+	> If there are no existing weights, the network will be trained from scratch, otherwise the network training will continue using previous weights.
+
 # ====== Dependencies ======
 Python 3.x or 2.x
 
