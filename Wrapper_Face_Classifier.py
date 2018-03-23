@@ -16,7 +16,6 @@ from keras.utils.vis_utils import plot_model
 from keras.utils import np_utils
 import yaml
 
-vino=0
 
 # ============================= GENERATE DATASETS =============================#
 def gen_photos(dir, name):
@@ -46,6 +45,7 @@ def gen_photos(dir, name):
 
     # While Loop for dataset generation
     print ("Press 'c' to store files.")
+    print ("Press 'q' to quit.")
     while (1):
         # Get Image
         ret, img = cap.read()
@@ -201,6 +201,10 @@ def model_train(w,h):
     model.add(Flatten())
 
     # 1st FC Layer (Fully Connected)
+    model.add(Dense(1024, activation='relu'))
+    model.add(Dropout(0.5))
+
+    # 1st FC Layer (Fully Connected)
     model.add(Dense(128, activation='relu'))
     model.add(Dropout(0.5))
 
@@ -231,6 +235,7 @@ def model_train(w,h):
     print("\nTEST ACCURACY (showing first 5 predictions):\n%s: %.2f%%\n" % (
     model.metrics_names[1], score[1] * 100))
 
+# ============================= TEST =============================#
 def classify(w_model,h_model):
 
     with open(curr_dir + "data.yaml", 'r') as stream:
@@ -240,6 +245,7 @@ def classify(w_model,h_model):
     cap.set(3, 1920)
     cap.set(4, 1080)
 
+    print ("Press 'q' to quit.")
     while (1):
         ret, img = cap.read()
         roi=img.copy()
@@ -259,8 +265,8 @@ def classify(w_model,h_model):
         for (x, y, w, h) in faces:
             top_left=(x,y)
             bottom_right=(x+w,y+h)
-            roi = cv2.rectangle(roi, (top_left[0], top_left[1]), (bottom_right[0], bottom_right[1]), (255,255,255), 2)
-            roi = cv2.resize(roi,(640,480))
+            img = cv2.rectangle(img, (top_left[0], top_left[1]), (bottom_right[0], bottom_right[1]), (255,255,255), 2)
+            img = cv2.resize(img,(640,480))
 
 
             crop_img = img[y:y+h,x:x+w]
@@ -272,26 +278,30 @@ def classify(w_model,h_model):
 
             name = data_loaded[result]['Name']
 
-            cv2.putText(roi, name+" "+str(result), (10, int(crop_img.shape[0] * 0.1)), cv2.FONT_HERSHEY_SIMPLEX, 1,
+            cv2.putText(img, name+" "+str(result), (10, int(crop_img.shape[0] * 0.1)), cv2.FONT_HERSHEY_SIMPLEX, 1,
                     (255, 0, 0), 2)
-            cv2.imshow("ROI", roi)
 
-        # ================== IMAGE DISPLAY
         img = cv2.resize(img,(640,480))
-        cv2.imshow('LIVE', img)
+        cv2.imshow("ROI", img)
+
+        # # ================== IMAGE DISPLAY
+        # img = cv2.resize(img,(640,480))
+        # cv2.imshow('LIVE', img)
 
         if key == ord("q"):
             cap.release()
             cv2.destroyAllWindows()
             break
 
-
 # ============================= MAIN =============================#
 if __name__== "__main__":
 
     # Define dimensions for the images to be trained (they will be shrinked to this size)
-    w=100
-    h=100
+    w=50
+    h=50
+    
+    # Webcam ID
+    vino = 0
 
     # Get current directory.
     curr_dir=os.path.dirname(os.path.realpath(sys.argv[0]))
@@ -353,9 +363,12 @@ if __name__== "__main__":
 
 
         elif mode == '2':
-            model = load_model(curr_dir+"Weights/face_classifier_model.h5")
-            classify(w,h)
 
+            if os.path.exists(weights_fold+"\\face_classifier_model.h5"):
+                model = load_model(curr_dir+"Weights/face_classifier_model.h5")
+                classify(w,h)
+            else:
+                print ("Weights don't exist.")
 
         elif mode == '3':
             model_train(w,h) #or "vgg16" , "vgg19"
