@@ -192,21 +192,17 @@ def model_train(w,h):
     model = Sequential()
 
     # 1st Convolution Layer
-    model.add(Convolution2D(64, 3, 3, activation='relu', input_shape=(w, h, 3)))
+    model.add(Convolution2D(32, 3, 3, activation='relu', input_shape=(w, h, 3)))
 
     # 2nd Convolution Layer
-    model.add(Convolution2D(64, 3, 3, activation='relu'))
+    model.add(Convolution2D(32, 3, 3, activation='relu'))
 
     # Flatten data to supply to FC Layer
     model.add(Flatten())
 
     # 1st FC Layer (Fully Connected)
-    model.add(Dense(1024, activation='relu'))
-    model.add(Dropout(0.5))
-
-    # 1st FC Layer (Fully Connected)
     model.add(Dense(128, activation='relu'))
-    model.add(Dropout(0.5))
+    model.add(Dropout(0.1))
 
     # 2nd FC Layer
     model.add(Dense(load_data.classes, activation='softmax'))
@@ -297,9 +293,9 @@ def classify(w_model,h_model):
 if __name__== "__main__":
 
     # Define dimensions for the images to be trained (they will be shrinked to this size)
-    w=50
-    h=50
-    
+    w=100
+    h=100
+
     # Webcam ID
     vino = 0
 

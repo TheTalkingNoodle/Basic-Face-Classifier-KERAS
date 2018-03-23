@@ -4,7 +4,7 @@
 
 These files let you create dataset, train and test your face classifier. It uses haarcascade for face detection and uses it for creating the dataset. Later it uses the haarcascade for detection and then classifier predicts the face. The name of classes is saved in a .yaml file.
 
-The Network Model consists of two convolution NN layers followed by two Fully-connected layers. The network can be increased or pretrained networks can also be used instead.
+The Network Model consists of two convolution NN layers followed by one Fully-connected layers. The network can be increased or pretrained networks can also be used instead.
 
 Options:
 1. Create Dataset
@@ -13,6 +13,8 @@ Options:
 	> The Result of Face Classification is displayed on the LIVE Video Feed.
 3. Train
 	> If there are no existing weights, the network will be trained from scratch, otherwise the network training will continue using previous weights.
+	> You can stop the training at any time if the loss doesn't go down anymore.
+	> If you wish to train network from scratch, just delete the weights from /Weights folder.
 
 # ====== Dependencies ======
 Python 3.x or 2.x
