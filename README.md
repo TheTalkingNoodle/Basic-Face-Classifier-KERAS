@@ -1,4 +1,4 @@
-# Basic-Face-Classifier-KERAS
+# Face Classifier using KERAS
 
 # ====== Description ======
 
